@@ -45,6 +45,8 @@ class Behavior {
  private:
   double convertIrVoltageToDistance(float) const noexcept;
   void speedUp() noexcept;
+  void turn(float, double, double) noexcept;
+  void randomTurn(double, double) noexcept;
 
  private:
   opendlv::proxy::DistanceReading m_frontUltrasonicReading;
@@ -62,6 +64,9 @@ class Behavior {
   const float STEP = 0.025f;
   const float DEFAULT_SPEED = 0.1f;
   float pedalPosition = 0.0f;
+  float groundSteeringAngle = 0.0f;
+  bool turning = false;
+  int turningCount = 0;
 };
 
 #endif

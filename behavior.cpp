@@ -16,6 +16,7 @@
  */
 
 #include "behavior.hpp"
+#include <time.h>
 
 Behavior::Behavior() noexcept:
   m_frontUltrasonicReading{},
@@ -94,7 +95,9 @@ void Behavior::step() noexcept
   double rightDistance = convertIrVoltageToDistance(rightIrReading.voltage());
 
   speedUp();
-  float groundSteeringAngle = 0.0f;
+  srand(time(NULL));
+  randomTurn(rightDistance, leftDistance);
+
   if (frontDistance < 0.2f) {
     pedalPosition = 0.0f;
   } else {
@@ -103,20 +106,14 @@ void Behavior::step() noexcept
     }
   }
 
-
   if (frontDistance < 0.4f)
   {
-     groundSteeringAngle = 0.2f;
+     turn(0.2f, rightDistance, leftDistance);
   }
 
   if (frontDistance < 0.3f)
   {
-     groundSteeringAngle = 0.35f;
-  }
-
-  if (rightDistance < leftDistance)
-  {
-     groundSteeringAngle += 0.2f;
+     turn(0.4f, rightDistance, leftDistance);
   }
 
 
@@ -143,6 +140,44 @@ double Behavior::convertIrVoltageToDistance(float voltage) const noexcept
   double sensorVoltage = (voltageDividerR1 + voltageDividerR2) / voltageDividerR2 * voltage;
   double distance = (2.5 - sensorVoltage) / 0.07;
   return distance;
+}
+
+void Behavior::turn(float value, double rightDistance, double leftDistance) noexcept
+{
+  if (rightDistance < leftDistance)
+  {
+     groundSteeringAngle = value;
+  }
+  else
+  {
+     groundSteeringAngle = -value;
+  }
+}
+
+void Behavior::randomTurn(double rightDistance, double leftDistance) noexcept
+{
+  //either continues to turn, stops turning or checks if it should turn randomly
+
+  if(turning)
+  {
+    turn(0.2f, rightDistance, leftDistance);
+  }
+  else
+  {
+    groundSteeringAngle = 0.0f;
+  }
+  turningCount++;
+  if(turningCount > 10)
+  {
+    turning = false;
+    turningCount = 0;
+    groundSteeringAngle = 0.0f;
+  }
+  double r = rand();
+  if(r < 0.1)
+  {
+    turning = true;
+  }
 }
 
 void Behavior::speedUp() noexcept
