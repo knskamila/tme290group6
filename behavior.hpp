@@ -44,6 +44,7 @@ class Behavior {
 
  private:
   double convertIrVoltageToDistance(float) const noexcept;
+  void speedUp() noexcept;
 
  private:
   opendlv::proxy::DistanceReading m_frontUltrasonicReading;
@@ -58,6 +59,9 @@ class Behavior {
   std::mutex m_rightIrReadingMutex;
   std::mutex m_groundSteeringAngleRequestMutex;
   std::mutex m_pedalPositionRequestMutex;
+  const float STEP = 0.025f;
+  const float DEFAULT_SPEED = 0.1f;
+  float pedalPosition = 0.0f;
 };
 
 #endif

@@ -93,25 +93,32 @@ void Behavior::step() noexcept
   double leftDistance = convertIrVoltageToDistance(leftIrReading.voltage());
   double rightDistance = convertIrVoltageToDistance(rightIrReading.voltage());
 
-  float pedalPosition = 0.15f;
-  float groundSteeringAngle = 0.15f;
-  if (frontDistance < 0.3f) {
+  speedUp();
+  float groundSteeringAngle = 0.0f;
+  if (frontDistance < 0.2f) {
     pedalPosition = 0.0f;
   } else {
     if (rearDistance < 0.3f) {
-      pedalPosition = 0.3f;
+      speedUp();
     }
   }
 
-  if (leftDistance < rightDistance) {
-    if (leftDistance < 0.2f) {
-      groundSteeringAngle = 0.15f;
-    }
-  } else {
-    if (rightDistance < 0.2f) {
-      groundSteeringAngle = 0.15f;
-    }
+
+  if (frontDistance < 0.4f)
+  {
+     groundSteeringAngle = 0.2f;
   }
+
+  if (frontDistance < 0.3f)
+  {
+     groundSteeringAngle = 0.35f;
+  }
+
+  if (rightDistance < leftDistance)
+  {
+     groundSteeringAngle += 0.2f;
+  }
+
 
   {
     std::lock_guard<std::mutex> lock1(m_groundSteeringAngleRequestMutex);
@@ -136,4 +143,20 @@ double Behavior::convertIrVoltageToDistance(float voltage) const noexcept
   double sensorVoltage = (voltageDividerR1 + voltageDividerR2) / voltageDividerR2 * voltage;
   double distance = (2.5 - sensorVoltage) / 0.07;
   return distance;
+}
+
+void Behavior::speedUp() noexcept
+{
+  if (pedalPosition < DEFAULT_SPEED)
+  {
+     if (pedalPosition < DEFAULT_SPEED - STEP)
+     {
+	pedalPosition += STEP;
+     }
+     else
+     {
+        pedalPosition = DEFAULT_SPEED;
+     }
+  }
+
 }
