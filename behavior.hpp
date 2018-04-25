@@ -46,7 +46,7 @@ class Behavior {
   double convertIrVoltageToDistance(float) const noexcept;
   void speedUp() noexcept;
   void turn(float, double, double) noexcept;
-  void randomTurn(double, double) noexcept;
+  void randomTurn() noexcept;
 
  private:
   opendlv::proxy::DistanceReading m_frontUltrasonicReading;
@@ -67,6 +67,7 @@ class Behavior {
   float groundSteeringAngle = 0.0f;
   bool turning = false;
   int turningCount = 0;
+  bool turningDirection = 0;
 };
 
 #endif

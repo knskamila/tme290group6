@@ -17,6 +17,7 @@
 
 #include "behavior.hpp"
 #include <time.h>
+#include <iostream>
 
 Behavior::Behavior() noexcept:
   m_frontUltrasonicReading{},
@@ -94,29 +95,26 @@ void Behavior::step() noexcept
   double leftDistance = convertIrVoltageToDistance(leftIrReading.voltage());
   double rightDistance = convertIrVoltageToDistance(rightIrReading.voltage());
 
-  speedUp();
-  srand(time(NULL));
-  randomTurn(rightDistance, leftDistance);
+  speedUp(); //default speed adjustment
 
-  if (frontDistance < 0.2f) {
-    pedalPosition = 0.0f;
-  } else {
-    if (rearDistance < 0.3f) {
-      speedUp();
-    }
-  }
-
-  if (frontDistance < 0.4f)
+  if (frontDistance < 0.2f)
   {
-     turn(0.2f, rightDistance, leftDistance);
+    pedalPosition = 0.0f;
+    groundSteeringAngle = 0.0f;
   }
-
-  if (frontDistance < 0.3f)
+  else if (rearDistance < 0.3f)
+  {
+    speedUp();
+  }
+  else if (frontDistance < 0.35f || rightDistance < 0.25f || leftDistance < 0.25f)
   {
      turn(0.4f, rightDistance, leftDistance);
   }
-
-
+  else //if no walls are nearby, perform random behavior
+  {
+     randomTurn();
+  }
+ 
   {
     std::lock_guard<std::mutex> lock1(m_groundSteeringAngleRequestMutex);
     std::lock_guard<std::mutex> lock2(m_pedalPositionRequestMutex);
@@ -142,39 +140,46 @@ double Behavior::convertIrVoltageToDistance(float voltage) const noexcept
   return distance;
 }
 
-void Behavior::turn(float value, double rightDistance, double leftDistance) noexcept
+void Behavior::turn(float value, double right, double left) noexcept
 {
-  if (rightDistance < leftDistance)
+  
+  if (left < 0.3f)
+  {
+     groundSteeringAngle = -value;
+  }
+  else if (right < 0.3f) //redundant, but for now...
   {
      groundSteeringAngle = value;
   }
   else
   {
-     groundSteeringAngle = -value;
+     groundSteeringAngle = value;
   }
 }
 
-void Behavior::randomTurn(double rightDistance, double leftDistance) noexcept
+void Behavior::randomTurn() noexcept
 {
   //either continues to turn, stops turning or checks if it should turn randomly
-
+  int r = rand();
   if(turning)
   {
-    turn(0.2f, rightDistance, leftDistance);
+    if(turningDirection) groundSteeringAngle = 0.3f;
+    else groundSteeringAngle = -0.3f;
   }
   else
   {
     groundSteeringAngle = 0.0f;
   }
   turningCount++;
-  if(turningCount > 10)
+  if(turningCount > 40)
   {
     turning = false;
     turningCount = 0;
     groundSteeringAngle = 0.0f;
+    if(r % 2 == 0) turningDirection = 1;
+    else turningDirection = 0;
   }
-  double r = rand();
-  if(r < 0.1)
+  if(r % 10 == 0)
   {
     turning = true;
   }
