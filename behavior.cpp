@@ -99,8 +99,8 @@ void Behavior::step() noexcept
 
   if (frontDistance < 0.2f)
   {
-    pedalPosition = 0.0f;
-    groundSteeringAngle = 0.0f;
+    pedalPosition = -0.2f;
+    groundSteeringAngle = 0.2f;
   }
   else if (rearDistance < 0.3f)
   {
@@ -136,8 +136,12 @@ double Behavior::convertIrVoltageToDistance(float voltage) const noexcept
   double voltageDividerR2 = 1000.0;
 
   double sensorVoltage = (voltageDividerR1 + voltageDividerR2) / voltageDividerR2 * voltage;
-  double distance = (2.5 - sensorVoltage) / 0.07;
+  //double distance = (2.5 - sensorVoltage) / 0.07;
+  double distance = 0.00372 * sensorVoltage * sensorVoltage - 0.21730 * sensorVoltage + 3.34464;
   return distance;
+
+
+
 }
 
 void Behavior::turn(float value, double right, double left) noexcept
