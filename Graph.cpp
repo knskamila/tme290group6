@@ -18,7 +18,7 @@ Graph::Graph(int* arr, int nNodes)
     // 5 0 0 2 0
     //
     // testarray[] = {0, 1, 0, 0, 5, 1, 0, 1, 0, 0 , 0, 1, 0, 1, 0, 0, 0, 1, 0, 2, 5, 0, 0, 2, 0};
-    // Graph gh(testarray, 5);
+    // Graph g(testarray, 5);
     // g.dijkstra(0,3) ->
     // distance: 3
     // path:
