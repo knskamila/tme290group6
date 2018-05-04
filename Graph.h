@@ -8,7 +8,7 @@
 
 #define INF 0x3f3f3f3f
 
-typedef std::pair<int, int> connection;
+typedef std::pair<int, float> connection;
 typedef std::list<connection> listOfConnections;
 
 class Graph
@@ -16,8 +16,8 @@ class Graph
 public:
     Graph();
     Graph(int);
-    Graph(int*, int);
-    void addEdge(int, int, int);
+    Graph(float*, int);
+    void addEdge(int, int, float);
     std::list<int> dijkstra(int, int);
     void printInfo();
 

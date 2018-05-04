@@ -8,7 +8,7 @@ Graph::Graph(int nNodes)
     this->connections = new listOfConnections[nNodes];
 }
 
-Graph::Graph(int* arr, int nNodes)
+Graph::Graph(float* arr, int nNodes)
 {
     //example
     // 0 1 0 0 5
@@ -18,7 +18,7 @@ Graph::Graph(int* arr, int nNodes)
     // 5 0 0 2 0
     //
     // testarray[] = {0, 1, 0, 0, 5, 1, 0, 1, 0, 0 , 0, 1, 0, 1, 0, 0, 0, 1, 0, 2, 5, 0, 0, 2, 0};
-    // Graph g(testarray, 5);
+    // Graph gh(testarray, 5);
     // g.dijkstra(0,3) ->
     // distance: 3
     // path:
@@ -33,7 +33,7 @@ Graph::Graph(int* arr, int nNodes)
     //iterate through the array and add nodes
     for(int px = 0; px < nNodes; px++) {
         for (int py = 0; py < nNodes; py++) {
-            int weight = *(arr + nNodes * px + py);
+            float weight = *(arr + nNodes * px + py);
             if (weight != 0) {
                 connections[px].push_back(std::make_pair(py, weight));
             }
@@ -41,7 +41,7 @@ Graph::Graph(int* arr, int nNodes)
     }
 }
 
-void Graph::addEdge(int src, int dest, int weight)
+void Graph::addEdge(int src, int dest, float weight)
 {
     connections[src].push_back(std::make_pair(dest, weight));
     connections[dest].push_back(std::make_pair(src, weight));
@@ -51,13 +51,13 @@ std::list<int> Graph::dijkstra(int src, int dest)
 {
     std::priority_queue<connection, std::vector<connection>, std::greater<connection>> searchingQueue;
 
-    std::vector<int> distance(nNodes, INF);
+    std::vector<float> distance(nNodes, INF);
 
     searchingQueue.push(std::make_pair(0, src));
     distance[src] = 0;
 
     int previousList[nNodes];
-    previousList[searchingQueue.top().second] = src;
+    previousList[(int)searchingQueue.top().second] = src;
     std::list<int> path;
 
     while(!searchingQueue.empty())
@@ -68,7 +68,7 @@ std::list<int> Graph::dijkstra(int src, int dest)
         for(listOfConnections::iterator i = connections[currentV].begin(); i != connections[currentV].end(); i++)
         {
             int nextV = (*i).first;
-            int weight = (*i).second;
+            float weight = (*i).second;
 
             if(distance[nextV] > distance[currentV] + weight)
             {
