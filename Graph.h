@@ -20,9 +20,10 @@ public:
     void addEdge(int, int, float);
     std::list<int> dijkstra(int, int);
     void printInfo();
+    int nNodes;
 
 private:
-    int nNodes;
+    //int nNodes;
     listOfConnections *connections;
 
 };
