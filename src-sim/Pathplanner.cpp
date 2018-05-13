@@ -67,7 +67,6 @@ void Pathplanner::createGraph(string filename, float xbase, float ybase, int hei
     vector<int> wallNodes;
 
     std::ifstream input(filename.c_str());
-    std::cout << input.is_open() << std::endl;
     for (std::string str; getline(input, str);) {
         std::vector<std::string> coordinates = stringtoolbox::split(
                 stringtoolbox::split(stringtoolbox::trim(str), ';')[0], ',');
@@ -169,9 +168,14 @@ Pathplanner::Pathplanner(string filename, float xBase, float yBase, int height, 
 {
     createGraph(filename, xBase, yBase, height, width, dx);
     int nodeBegin = pointToNode(xBase, yBase, xBegin, yBegin, height, dx);
-    int nodeGoal = pointToNode(xBase, yBase, xGoal, yGoal, height, dx)
+    int nodeGoal = pointToNode(xBase, yBase, xGoal, yGoal, height, dx);
+    std::vector<int> dummy;
+    dummy.insert(dummy.begin(), nodeGoal);
+    dummy.insert(dummy.begin(), nodeBegin);
+    g.printMap(width*(1/dx), dummy);
     std::vector<int> nodePath = g.dijkstra(nodeBegin, nodeGoal);
-    nodePath = g.simplifyPath(nodePath);
+    g.printMap(width*(1/dx), nodePath);
+    nodePath = g.simplifyPath(nodePath, width);
     g.printMap(width*(1/dx), nodePath);
     path = nodeToPoint(nodePath, width, dx);
 }
