@@ -20,10 +20,11 @@ public:
     Graph(float*, int);
     void addEdge(int, int, float);
     std::vector<int> dijkstra(int, int);
-    std::vector<int> simplifyPath(std::vector<int>);
+    std::vector<int> simplifyPath(std::vector<int>, int);
     void printInfo();
     float getConnection(int, int);
     void printMap(int, std::vector<int>);
+    int getLinearityType(int, int, int);
     void zeroNode(int);
     int nNodes;
 

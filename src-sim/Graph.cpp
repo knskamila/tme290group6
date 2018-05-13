@@ -47,15 +47,14 @@ void Graph::addEdge(int src, int dest, float weight)
     connections[dest].push_back(std::make_pair(src, weight));
 }
 
-std::vector<int> Graph::simplifyPath(std::vector<int> path)
+std::vector<int> Graph::simplifyPath(std::vector<int> path, int width)
 {
     int it = 0;
     std::list<int> toErase;
     while(it < path.size() - 2)
     {
-        if(getConnection(path.at(it), path.at(it+1)) == getConnection(path.at(it+1), path.at(it+2)))
+        if(getLinearityType(path.at(it), path.at(it+1), width) == getLinearityType(path.at(it+1), path.at(it+2), width))
         {
-            //path.erase(path.begin() + it + 1);
             toErase.push_front(it + 1);
         }
         it++;
@@ -125,6 +124,22 @@ float Graph::getConnection(int nodeA, int nodeB)
         }
     }
     return 0;
+}
+
+int Graph::getLinearityType(int nodeA, int nodeB, int width)
+{
+    //4 linearity types: - | \ /
+    if(getConnection(nodeA, nodeB) == 1)
+    {
+        if(nodeA%width == nodeB%width) return 1;
+        else return 2;
+    }
+    else if(getConnection(nodeA, nodeB) > 1)
+    {
+        if(nodeA%width < nodeB%width) return 3;
+        else return 4;
+    }
+    else return 0;
 }
 
 void Graph::printInfo()
