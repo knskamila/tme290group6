@@ -5,6 +5,7 @@
 #include <list>
 #include <queue>
 #include <vector>
+#include <algorithm>
 
 #define INF 0x3f3f3f3f
 
@@ -18,9 +19,11 @@ public:
     Graph(int);
     Graph(float*, int);
     void addEdge(int, int, float);
-    std::list<int> dijkstra(int, int);
+    std::vector<int> dijkstra(int, int);
+    std::vector<int> simplifyPath(std::vector<int>);
     void printInfo();
-    void printMap(int);
+    float getConnection(int, int);
+    void printMap(int, std::vector<int>);
     void zeroNode(int);
     int nNodes;
 

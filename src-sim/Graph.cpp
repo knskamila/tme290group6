@@ -18,7 +18,7 @@ Graph::Graph(float* arr, int nNodes)
     // 5 0 0 2 0
     //
     // testarray[] = {0, 1, 0, 0, 5, 1, 0, 1, 0, 0 , 0, 1, 0, 1, 0, 0, 0, 1, 0, 2, 5, 0, 0, 2, 0};
-    // Graph gh(testarray, 5);
+    // Graph g(testarray, 5);
     // g.dijkstra(0,3) ->
     // distance: 3
     // path:
@@ -47,7 +47,27 @@ void Graph::addEdge(int src, int dest, float weight)
     connections[dest].push_back(std::make_pair(src, weight));
 }
 
-std::list<int> Graph::dijkstra(int src, int dest)
+std::vector<int> Graph::simplifyPath(std::vector<int> path)
+{
+    int it = 0;
+    std::list<int> toErase;
+    while(it < path.size() - 2)
+    {
+        if(getConnection(path.at(it), path.at(it+1)) == getConnection(path.at(it+1), path.at(it+2)))
+        {
+            //path.erase(path.begin() + it + 1);
+            toErase.push_front(it + 1);
+        }
+        it++;
+    }
+    for(auto v: toErase)
+    {
+        path.erase(path.begin() + v);
+    }
+    return path;
+}
+
+std::vector<int> Graph::dijkstra(int src, int dest)
 {
     std::priority_queue<connection, std::vector<connection>, std::greater<connection>> searchingQueue;
 
@@ -58,7 +78,7 @@ std::list<int> Graph::dijkstra(int src, int dest)
 
     int previousList[nNodes];
     previousList[(int)searchingQueue.top().second] = src;
-    std::list<int> path;
+    std::vector<int> path;
 
     while(!searchingQueue.empty())
     {
@@ -80,20 +100,31 @@ std::list<int> Graph::dijkstra(int src, int dest)
     }
 
     int prev = dest;
-    path.push_front(prev);
+    path.insert(path.begin(), prev);
     while(prev != src)
     {
         prev = previousList[prev];
-        path.push_front(prev);
+        path.insert(path.begin(), prev);
     }
-    std::cout << "distance: " << distance[dest] << std::endl;
-    std::cout << "path: " << std::endl;
-    for(auto v: path)
-    {
-        std::cout << v << std::endl;
-    }
+    //std::cout << "distance: " << distance[dest] << std::endl;
+    //std::cout << "path: " << std::endl;
+    //for(auto v: path)
+    //{
+    //    std::cout << v << std::endl;
+    //}
 
     return path;
+}
+float Graph::getConnection(int nodeA, int nodeB)
+{
+    for(listOfConnections::iterator i = connections[nodeA].begin(); i != connections[nodeA].end(); i++)
+    {
+        if ((*i).first == nodeB)
+        {
+            return (*i).second;
+        }
+    }
+    return 0;
 }
 
 void Graph::printInfo()
@@ -111,13 +142,17 @@ void Graph::printInfo()
     }
 }
 
-void Graph::printMap(int width)
+void Graph::printMap(int width, std::vector<int> path)
 {
     int currentColumn = 1;
     for(int i = 0; i<nNodes; i++)
     {
         listOfConnections pairs = connections[i];
-        if(pairs.size() == 0)
+        if(std::find(path.begin(), path.end(), i) != path.end())
+        {
+            std::cout << "*";
+        }
+        else if(pairs.size() == 0)
         {
             std::cout << "#";
         }

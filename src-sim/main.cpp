@@ -79,25 +79,19 @@ int pointToNode(float xbase, float ybase, float x, float y, int height, float dx
     //xbase -= 1/(2*dx);
     //ybase -= 1/(2*dx);
 
-    int xGrid = (int)((x - xbase)/dx + 0.5);
-    int yGrid = (int)((y - ybase)/dx + 0.5);
+    int xGrid = (int) ((x - xbase) / dx + 0.5);
+    int yGrid = (int) ((y - ybase) / dx + 0.5);
 
-    return yGrid + xGrid*(float)height/dx;
-
-    //float sqrtNodes = (float) sqrt(nrNodes);
-   /* int counter = 0;
-    for (float i = xbase; i < xbase + width ; i++) {
-        for (float j = ybase; j < ybase + height ; j++) {
-            if ( cmpf(i, x) && cmpf (j, y) ) {
-                return counter;
-            } else {
-                counter++;
-            }
-        }
-    }
-    return counter;*/
+    return yGrid + xGrid * (float) height / dx;
 }
 
+pair<float, float> nodeToPoint(int node, int width, float dx)
+{
+    float nodesPerMeter = 1/dx;
+    float xNode = nodesPerMeter * (node/width);
+    float yNode = nodesPerMeter * (node%width);
+    return std::make_pair(xNode, yNode);
+}
 
 bool notPartOf(vector<int> vectorList, int elem) {
     return (find(vectorList.begin(), vectorList.end(), elem) == vectorList.end());
@@ -238,13 +232,18 @@ void createGraph(string filename, float xbase, float ybase, int height, int widt
         }
     }
     g.printInfo();
-    g.printMap(width*multiplier);
+    g.printMap(width*multiplier, std::vector<int>());
+    std::vector<int> path = g.dijkstra(50,150);
+    g.printMap(width*multiplier, path);
+    path = g.simplifyPath(path);
+    g.printMap(width*multiplier, path);
 }
 
 
 
 int main() {
     //coordToPoints("1.0, -1.0, 1.0, 1.0;");
-    createGraph("simulation-map.txt", -3, -3, 7, 7, 0.1);
+    createGraph("simulation-map.txt", -3, -3, 7, 7, 0.25);
+
 }
 
