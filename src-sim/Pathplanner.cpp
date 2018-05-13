@@ -25,23 +25,20 @@ int Pathplanner::pointToNode(float xbase, float ybase, float x, float y, int hei
     return yGrid + xGrid * (float) height / dx;
 }
 
-pair<float, float> Pathplanner::nodeToPoint(int node, int width, float dx)
+pair<float, float> Pathplanner::nodeToPoint(int node, int width, float xBase, float yBase, float dx)
 {
-    float nodesPerMeter = 1/dx;
-    float xNode = nodesPerMeter * (node/width);
-    float yNode = nodesPerMeter * (node%width);
+    int nodesPerMeter = 1/dx;
+    float xNode = xBase + node/(width*nodesPerMeter)*dx;
+    float yNode = yBase + node%(width*nodesPerMeter)*dx;
     return std::make_pair(xNode, yNode);
 }
 
-list<pair<float, float>> Pathplanner::nodeToPoint(std::vector<int> nodelist, int width, float dx)
+list<pair<float, float>> Pathplanner::nodeToPoint(std::vector<int> nodelist, int width, float xBase, float yBase, float dx)
 {
     list<pair<float, float>> pointList;
     for (auto v: nodelist)
     {
-        float nodesPerMeter = 1/dx;
-        float xNode = nodesPerMeter * (v/width);
-        float yNode = nodesPerMeter * (v%width);
-        pointList.push_back(std::make_pair(xNode, yNode));
+        pointList.push_back(nodeToPoint(v, width, xBase, yBase, dx));
     }
 
     return pointList;
@@ -164,18 +161,22 @@ std::list<std::pair<float,float>> Pathplanner::getPath()
     return path;
 }
 
-Pathplanner::Pathplanner(string filename, float xBase, float yBase, int height, int width, float dx, float xBegin, float yBegin, float xGoal, float yGoal) noexcept
-{
+Pathplanner::Pathplanner(string filename, float xBase, float yBase, int height, int width, float dx, float xBegin, float yBegin, float xGoal, float yGoal) noexcept {
     createGraph(filename, xBase, yBase, height, width, dx);
     int nodeBegin = pointToNode(xBase, yBase, xBegin, yBegin, height, dx);
     int nodeGoal = pointToNode(xBase, yBase, xGoal, yGoal, height, dx);
     std::vector<int> dummy;
     dummy.insert(dummy.begin(), nodeGoal);
     dummy.insert(dummy.begin(), nodeBegin);
-    g.printMap(width*(1/dx), dummy);
+    g.printMap(width * (1 / dx), dummy);
     std::vector<int> nodePath = g.dijkstra(nodeBegin, nodeGoal);
-    g.printMap(width*(1/dx), nodePath);
+    g.printMap(width * (1 / dx), nodePath);
     nodePath = g.simplifyPath(nodePath, width);
-    g.printMap(width*(1/dx), nodePath);
-    path = nodeToPoint(nodePath, width, dx);
+    g.printMap(width * (1 / dx), nodePath);
+    path = nodeToPoint(nodePath, width, xBase, yBase, dx);
+    for (auto v:path)
+    {
+        std::cout << v.first << ", " << v.second << std::endl;
+    }
+
 }

@@ -25,8 +25,8 @@ private:
     bool cmpf(float, float);
     void swap(float*, float*);
     int pointToNode(float xbase, float ybase, float x, float y, int height, float dx);
-    std::pair<float, float> nodeToPoint(int node, int width, float dx);
-    std::list<std::pair<float, float>> nodeToPoint(std::vector<int> nodelist, int width, float dx);
+    std::pair<float, float> nodeToPoint(int node, int width, float, float, float dx);
+    std::list<std::pair<float, float>> nodeToPoint(std::vector<int> nodelist, int width, float, float, float dx);
     bool notPartOf(std::vector<int> vectorList, int elem);
     void createGraph(std::string filename, float xbase, float ybase, int height, int width, float dx);
 
