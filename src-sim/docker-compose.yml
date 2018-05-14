@@ -40,7 +40,7 @@ services:
         command: "/usr/bin/opendlv-sim-adc-bbblue --map-file=/opt/simulation-map.txt --x=-2.0 --y=-0.6 --yaw=-1.57 --cid=111 --freq=10 --frame-id=0 --id=1"
 
     logic-test-kiwi:
-        image: tme290group6/simulation2:v0.1
+        image: tme290group6/simulation:v0.1
         network_mode: "host"
         volumes:
           - ./simulation-map.txt:/opt/simulation-map.txt
