@@ -187,41 +187,69 @@ void createGraph(string filename, float xbase, float ybase, int height, int widt
 
     for (int i = 0; i < nrNodes; i++) {
         if (notPartOf(wallNodes, i)) {
+            // nodes with no walls
             if ((i % sqrtNodes != (sqrtNodes-1)) && (i % sqrtNodes !=0) && (i > sqrtNodes) && (i < (nrNodes - sqrtNodes)) ) {
-                if (notPartOf(wallNodes, i+1) )
+                if (notPartOf(wallNodes, i+1) ){
                     g.addEdge(i, i+1, 1);
-                if (notPartOf(wallNodes, i-1))
+                } else {
+                   g.zeroNode(i); 
+                }
+                if (notPartOf(wallNodes, i-1)){
                     g.addEdge(i, i-1, 1);
-                if (notPartOf(wallNodes, i + sqrtNodes))
+                } else {
+                    g.zeroNode(i);   
+                }
+                if (notPartOf(wallNodes, i + sqrtNodes)) {
                     g.addEdge(i, i+ sqrtNodes, 1);
-                if (notPartOf(wallNodes, i - sqrtNodes))
+                } else {
+                    g.zeroNode(i);
+                }
+                if (notPartOf(wallNodes, i - sqrtNodes)) {
                     g.addEdge(i, i - sqrtNodes, 1);
-                if (notPartOf(wallNodes, i - sqrtNodes - 1) )
+                } else {
+                    g.zeroNode(i);
+                }
+                if (notPartOf(wallNodes, i - sqrtNodes - 1) ){
                     g.addEdge(i, i - sqrtNodes -1 , sqrt(2));
-                if (notPartOf(wallNodes, i - sqrtNodes +1))
+                } else {
+                    g.zeroNode(i);
+                }
+                if (notPartOf(wallNodes, i - sqrtNodes +1)){
                     g.addEdge(i, i - sqrtNodes +1 , sqrt(2));
-                if (notPartOf(wallNodes, i + sqrtNodes -1 ))
+                } else {
+                    g.zeroNode(i);
+                }
+                if (notPartOf(wallNodes, i + sqrtNodes -1 )){
                     g.addEdge(i, i + sqrtNodes -1, sqrt(2));
-                if (notPartOf(wallNodes, i + sqrtNodes +1))
+                } else {
+                    g.zeroNode(i);
+                }
+                if (notPartOf(wallNodes, i + sqrtNodes +1)){
                     g.addEdge(i, i + sqrtNodes +1, sqrt(2));
+                } else {
+                    g.zeroNode(i);
+                }
 
+            // left wall, this is however only needed if we don't assume walls around map
             } else if (i < sqrtNodes) {
-                if (notPartOf(wallNodes, i + 1) && (i != sqrtNodes) )
+                if (notPartOf(wallNodes, i + 1) && (i != sqrtNodes -1) ) {
                     g.addEdge(i, i+1, 1);
+                }                     
                 if (notPartOf(wallNodes, i-1) && (i != 0))
                     g.addEdge(i, i-1, 1);
+            // right wall
             } else if (i > (nrNodes - sqrtNodes)) {
                 if (notPartOf(wallNodes, i + 1) && (i != nrNodes -1) )
                     g.addEdge(i, i+1, 1);
                 if (notPartOf(wallNodes, i-1) && (i != (nrNodes - sqrtNodes -1)))
                     g.addEdge(i, i-1, 1);
-
+            // Upper
             } else if (i % sqrtNodes == sqrtNodes -1) {
                 if (notPartOf(wallNodes, i + sqrtNodes) && (i != nrNodes -1))
                     g.addEdge(i, i+ sqrtNodes, 1);
                 if (notPartOf(wallNodes, i - sqrtNodes) && (i != sqrtNodes -1))
                     g.addEdge(i, i - sqrtNodes, 1);
-
+            // base 
             } else if (i % sqrtNodes == 0) {
                 if (notPartOf(wallNodes, i + sqrtNodes) && (i != (nrNodes-sqrtNodes )))
                     g.addEdge(i, i+ sqrtNodes, 1);
