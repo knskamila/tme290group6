@@ -17,6 +17,7 @@
 
 #include "behavior.hpp"
 #include <time.h>
+#include <math.h>
 #include <iostream>
 
 Behavior::Behavior() noexcept:
@@ -107,19 +108,35 @@ void Behavior::step() noexcept
   double rightDistance = convertIrVoltageToDistance(rightIrReading.voltage());
   double xp = posReading.x();
   double yp = posReading.y();
+  double heading = posReading.yaw();
 
+  double xGoal = path.front().first;
+  double yGoal = path.front().second;
+
+  if(reached(xp, yp, xGoal, yGoal) && path.size() > 0)
+  {
+      std::cout << "point passed" << std::endl;
+      path.pop_front();
+      if(path.size() > 1)
+      {
+          xGoal = path.front().first;
+          yGoal = path.front().second;
+      }
+      else pedalPosition = 0.0;
+  }
+
+  double desiredHeadingTan = (yp - yGoal) / (xp - xGoal);
+  double desiredHeading = atan(desiredHeadingTan);
+
+
+  groundSteeringAngle = 0.9f*(float)(desiredHeading - heading);
 
   pedalPosition = DEFAULT_SPEED;
 
-  if (frontDistance < 0.1f || rearDistance < 0.1f || rightDistance < 0.1f || leftDistance < 0.1f)
+  if (frontDistance < 0.15f || rearDistance < 0.1f || rightDistance < 0.1f || leftDistance < 0.1f)
   {
     pedalPosition = 0.0f;
     groundSteeringAngle = 0.0f;
-  }
-
-  if (xGoal < xp || yGoal < yp)
-  {
-    pedalPosition = 0.0f;
   }
 
  
@@ -147,9 +164,13 @@ double Behavior::convertIrVoltageToDistance(float voltage) const noexcept
   return distance;
 }
 
-void Behavior::setGoal(float xG, float yG) noexcept
+void Behavior::setGoal(std::list<std::pair<float,float>> p) noexcept
 {
-  xGoal = xG;
-  yGoal = yG;
+  path = p;
 }
 
+bool Behavior::reached(double xp, double yp, double xGoal, double yGoal) noexcept
+{
+    if(abs(xp - xGoal) < 0.15 && abs(yp - yGoal) < 0.15) return 1;
+    else return 0;
+}

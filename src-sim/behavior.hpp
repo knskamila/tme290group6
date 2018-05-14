@@ -19,6 +19,7 @@
 #define BEHAVIOR
 
 #include <mutex>
+#include <list>
 
 #include "opendlv-standard-message-set.hpp"
 
@@ -43,7 +44,8 @@ class Behavior {
   //void setPos(opendlv::sim::Frame const &) noexcept;
   void setPos(opendlv::sim::Frame const &) noexcept;
   void step() noexcept;
-  void setGoal(float, float) noexcept;
+  void setGoal(std::list<std::pair<float,float>>) noexcept;
+  bool reached(double, double, double, double) noexcept;
 
  private:
   double convertIrVoltageToDistance(float) const noexcept;
@@ -64,8 +66,7 @@ class Behavior {
   std::mutex m_pedalPositionRequestMutex;
   std::mutex m_positionMutex;
   const float DEFAULT_SPEED = 0.2f;
-  float xGoal = 0.0f;
-  float yGoal = 0.0f;
+  std::list<std::pair<float,float>> path = std::list<std::pair<float,float>>();
   //float xp = 0.0f;
   //float yp = 0.0f;
   float pedalPosition = 0.0f;

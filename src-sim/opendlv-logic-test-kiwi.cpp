@@ -18,6 +18,7 @@
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
 #include "behavior.hpp"
+#include "Pathplanner.h"
 
 int32_t main(int32_t argc, char **argv) {
   int32_t retCode{0};
@@ -33,11 +34,13 @@ int32_t main(int32_t argc, char **argv) {
     float const FREQ = std::stof(commandlineArguments["freq"]);
     float const X = std::stof(commandlineArguments["x"]);
     float const Y = std::stof(commandlineArguments["y"]);
+    float const dx = std::stof(commandlineArguments["dx"]);
 
     Behavior behavior;
    // std::cout << "provide goal coordinates: x y" << std::endl;
-   // std::cin >> x >> y;
-    behavior.setGoal(X,Y);
+   //
+    Pathplanner pp(commandlineArguments["map-file"], -3.0, -3.0, 7, 7, dx, -2.0, -0.7, X, Y);
+    behavior.setGoal(pp.getPath());
 
     auto onDistanceReading{[&behavior](cluon::data::Envelope &&envelope)
       {
