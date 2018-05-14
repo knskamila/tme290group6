@@ -110,28 +110,43 @@ void Behavior::step() noexcept
   double yp = posReading.y();
   double heading = posReading.yaw();
 
+  xp = randomNoise(xp, 0.05);
+  yp = randomNoise(yp, 0.05);
+  heading = randomNoise(heading, 0.05);
+
   double xGoal = path.front().first;
   double yGoal = path.front().second;
+
+  double desiredHeadingTan = (yp - yGoal) / (xp - xGoal);
+  double desiredHeading = atan(desiredHeadingTan);
+
+  groundSteeringAngle = 0.9f*(float)(desiredHeading - heading);
+  pedalPosition = DEFAULT_SPEED;
 
   if(reached(xp, yp, xGoal, yGoal) && path.size() > 0)
   {
       std::cout << "point passed" << std::endl;
       path.pop_front();
-      if(path.size() > 1)
+      if(path.size() > 0)
       {
           xGoal = path.front().first;
           yGoal = path.front().second;
       }
-      else pedalPosition = 0.0;
+      else
+      {
+          std::cout << "path finished" << std::endl;
+          xGoal = 10000;
+          yGoal = 10000;
+          pedalPosition = 0.0;
+          groundSteeringAngle = 0.0f;
+      }
   }
 
-  double desiredHeadingTan = (yp - yGoal) / (xp - xGoal);
-  double desiredHeading = atan(desiredHeadingTan);
-
-
-  groundSteeringAngle = 0.9f*(float)(desiredHeading - heading);
-
-  pedalPosition = DEFAULT_SPEED;
+  if(path.size() == 0)
+  {
+      pedalPosition = 0.0;
+      groundSteeringAngle = 0.0f;
+  }
 
   if (frontDistance < 0.15f || rearDistance < 0.1f || rightDistance < 0.1f || leftDistance < 0.1f)
   {
@@ -173,4 +188,11 @@ bool Behavior::reached(double xp, double yp, double xGoal, double yGoal) noexcep
 {
     if(abs(xp - xGoal) < 0.15 && abs(yp - yGoal) < 0.15) return 1;
     else return 0;
+}
+
+double Behavior::randomNoise(double value, double range) noexcept
+{
+    std::uniform_real_distribution<double> unif(-range,range);
+    std::default_random_engine re;
+    return value + unif(re);
 }
