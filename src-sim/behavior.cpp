@@ -110,6 +110,10 @@ void Behavior::step() noexcept
   double yp = posReading.y();
   double heading = posReading.yaw();
 
+  xp = randomNoise(xp, 0.05);
+  yp = randomNoise(yp, 0.05);
+  heading = randomNoise(heading, 0.05);
+
   double xGoal = path.front().first;
   double yGoal = path.front().second;
 
@@ -184,4 +188,11 @@ bool Behavior::reached(double xp, double yp, double xGoal, double yGoal) noexcep
 {
     if(abs(xp - xGoal) < 0.15 && abs(yp - yGoal) < 0.15) return 1;
     else return 0;
+}
+
+double Behavior::randomNoise(double value, double range) noexcept
+{
+    std::uniform_real_distribution<double> unif(-range,range);
+    std::default_random_engine re;
+    return value + unif(re);
 }

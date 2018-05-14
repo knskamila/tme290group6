@@ -20,6 +20,7 @@
 
 #include <mutex>
 #include <list>
+#include <random>
 
 #include "opendlv-standard-message-set.hpp"
 
@@ -41,11 +42,11 @@ class Behavior {
   void setRearUltrasonic(opendlv::proxy::DistanceReading const &) noexcept;
   void setLeftIr(opendlv::proxy::VoltageReading const &) noexcept;
   void setRightIr(opendlv::proxy::VoltageReading const &) noexcept;
-  //void setPos(opendlv::sim::Frame const &) noexcept;
   void setPos(opendlv::sim::Frame const &) noexcept;
   void step() noexcept;
   void setGoal(std::list<std::pair<float,float>>) noexcept;
   bool reached(double, double, double, double) noexcept;
+  double randomNoise(double, double) noexcept;
 
  private:
   double convertIrVoltageToDistance(float) const noexcept;
