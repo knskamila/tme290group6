@@ -138,6 +138,12 @@ void Behavior::step() noexcept
       }
   }
 
+  if(path.size() == 0)
+  {
+      pedalPosition = 0.0;
+      groundSteeringAngle = 0.0f;
+  }
+
   if (frontDistance < 0.15f || rearDistance < 0.1f || rightDistance < 0.1f || leftDistance < 0.1f)
   {
     pedalPosition = 0.0f;
