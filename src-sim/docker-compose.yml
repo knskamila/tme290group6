@@ -1,0 +1,54 @@
+version: '2'
+
+services:
+    sim-global:
+        image: chalmersrevere/opendlv-sim-global-amd64:v0.0.5
+        network_mode: "host"
+        command: "/usr/bin/opendlv-sim-global --cid=111 --freq=10 --frame-id=0 --x=-2.0 --y=-0.7 --yaw=0.0"
+
+    sim-motor-kiwi:
+        image: chalmersrevere/opendlv-sim-motor-kiwi-amd64:v0.0.4
+        network_mode: "host"
+        command: "/usr/bin/opendlv-sim-motor-kiwi --cid=111 --freq=100 --frame-id=0"
+
+    sim-ultrasonic-srf08-front:
+        image: chalmersrevere/opendlv-sim-ultrasonic-srf08-amd64:v0.0.4
+        network_mode: "host"
+        volumes:
+          - ./simulation-map.txt:/opt/simulation-map.txt
+        command: "/usr/bin/opendlv-sim-ultrasonic-srf08 --map-file=/opt/simulation-map.txt --x=-1.8 --y=-0.7 --yaw=0.0 --cid=111 --freq=10 --frame-id=0 --id=0"
+    
+    sim-ultrasonic-srf08-rear:
+        image: chalmersrevere/opendlv-sim-ultrasonic-srf08-amd64:v0.0.4
+        network_mode: "host"
+        volumes:
+          - ./simulation-map.txt:/opt/simulation-map.txt
+        command: "/usr/bin/opendlv-sim-ultrasonic-srf08 --map-file=/opt/simulation-map.txt --x=-1.8 --y=-0.7 --yaw=3.14 --cid=111 --freq=10 --frame-id=0 --id=1"
+    
+    sim-adc-bbblue-left:
+        image: chalmersrevere/opendlv-sim-adc-bbblue-amd64:v0.0.4
+        network_mode: "host"
+        volumes:
+          - ./simulation-map.txt:/opt/simulation-map.txt
+        command: "/usr/bin/opendlv-sim-adc-bbblue --map-file=/opt/simulation-map.txt --x=-2.0 --y=-0.6 --yaw=1.57 --cid=111 --freq=10 --frame-id=0 --id=0"
+    
+    sim-adc-bbblue-right:
+        image: chalmersrevere/opendlv-sim-adc-bbblue-amd64:v0.0.4
+        network_mode: "host"
+        volumes:
+          - ./simulation-map.txt:/opt/simulation-map.txt
+        command: "/usr/bin/opendlv-sim-adc-bbblue --map-file=/opt/simulation-map.txt --x=-2.0 --y=-0.6 --yaw=-1.57 --cid=111 --freq=10 --frame-id=0 --id=1"
+
+    logic-test-kiwi:
+        image: tme290group6/simulation2:v0.1
+        network_mode: "host"
+        volumes:
+          - ./simulation-map.txt:/opt/simulation-map.txt
+        command: "/usr/bin/opendlv-logic-test-kiwi --cid=111 --map-file=/opt/simulation-map.txt --freq=5 --frame-id=0 --x=2.0f --y=-0.7f --dx=0.25f"
+    
+    ui-default:
+        image: chalmersrevere/opendlv-ui-default-amd64:v0.0.3
+        network_mode: "host"
+        volumes:
+          - ./simulation-map.txt:/srv/http/simulation-map.txt
+        command: "--cid=111"
