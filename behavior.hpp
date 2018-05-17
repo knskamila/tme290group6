@@ -19,8 +19,11 @@
 #define BEHAVIOR
 
 #include <mutex>
-
+#include <list>
+#include <random>
 #include "opendlv-standard-message-set.hpp"
+
+#define PI 3.14159
 
 class Behavior {
  private:
@@ -40,13 +43,15 @@ class Behavior {
   void setRearUltrasonic(opendlv::proxy::DistanceReading const &) noexcept;
   void setLeftIr(opendlv::proxy::VoltageReading const &) noexcept;
   void setRightIr(opendlv::proxy::VoltageReading const &) noexcept;
+  void setPos(opendlv::sim::Frame const &) noexcept;
   void step() noexcept;
+  void setGoal(std::list<std::pair<float,float>>, double, double, double) noexcept;
+  bool reached(double, double, double, double) noexcept;
+  double randomNoise(double, double) noexcept;
+  double averageValue(double, double, double) noexcept;
 
  private:
   double convertIrVoltageToDistance(float) const noexcept;
-  void speedUp() noexcept;
-  void turn(float, double, double) noexcept;
-  void randomTurn() noexcept;
 
  private:
   opendlv::proxy::DistanceReading m_frontUltrasonicReading;
@@ -55,19 +60,21 @@ class Behavior {
   opendlv::proxy::VoltageReading m_rightIrReading;
   opendlv::proxy::GroundSteeringRequest m_groundSteeringAngleRequest;
   opendlv::proxy::PedalPositionRequest m_pedalPositionRequest;
+  opendlv::sim::Frame m_position = opendlv::sim::Frame();
   std::mutex m_frontUltrasonicReadingMutex;
   std::mutex m_rearUltrasonicReadingMutex;
   std::mutex m_leftIrReadingMutex;
   std::mutex m_rightIrReadingMutex;
   std::mutex m_groundSteeringAngleRequestMutex;
   std::mutex m_pedalPositionRequestMutex;
-  const float STEP = 0.025f;
-  const float DEFAULT_SPEED = 0.1f;
+  std::mutex m_positionMutex;
+  std::list<std::pair<float,float>> path = std::list<std::pair<float,float>>();
+  const float DEFAULT_SPEED = 0.2f;
   float pedalPosition = 0.0f;
   float groundSteeringAngle = 0.0f;
-  bool turning = false;
-  int turningCount = 0;
-  bool turningDirection = 0;
+  double xp = 0;
+  double yp = 0;
+  double heading = 0;
 };
 
 #endif
