@@ -18,7 +18,6 @@
 #include "cluon-complete.hpp"
 #include "opendlv-standard-message-set.hpp"
 #include "behavior.hpp"
-#include "Pathplanner.h"
 
 int32_t main(int32_t argc, char **argv) {
   int32_t retCode{0};
@@ -32,20 +31,13 @@ int32_t main(int32_t argc, char **argv) {
     bool const VERBOSE{commandlineArguments.count("verbose") != 0};
     uint16_t const CID = std::stoi(commandlineArguments["cid"]);
     float const FREQ = std::stof(commandlineArguments["freq"]);
-    float const XG = std::stof(commandlineArguments["xgoal"]);
-    float const YG = std::stof(commandlineArguments["ygoal"]);
-    float const XP = std::stof(commandlineArguments["xpos"]);
-    float const YP = std::stof(commandlineArguments["ypos"]);
-    float const CORNERX = std::stof(commandlineArguments["xcorn"]);
-    float const CORNERY = std::stof(commandlineArguments["ycorn"]);
-    float const H = std::stof(commandlineArguments["yaw"]);
-    float const dx = std::stof(commandlineArguments["dx"]);
+    float const FORWARD = std::stof(commandlineArguments["forw"]);
+    float const BACKWARD = std::stof(commandlineArguments["back"]);
+    float const MARGIN = std::stof(commandlineArguments["slow"]);
+    float const DIFFERENCE = std::stof(commandlineArguments["diff"]);
 
     Behavior behavior;
-   // std::cout << "provide goal coordinates: x y" << std::endl;
-   //
-    Pathplanner pp(commandlineArguments["map-file"], CORNERX, CORNERY, 7, 7, dx, XP, YP, XG, YG);
-    behavior.setGoal(pp.getPath(), XG, YG, H);
+    behavior.setSpeed(FORWARD, BACKWARD, DIFFERENCE, MARGIN);
 
     auto onDistanceReading{[&behavior](cluon::data::Envelope &&envelope)
       {
@@ -67,17 +59,10 @@ int32_t main(int32_t argc, char **argv) {
           behavior.setRightIr(voltageReading);
         }
       }};
-    auto onFrame{[&behavior](cluon::data::Envelope &&envelope)
-    {
-        auto Frame = cluon::extractMessage<opendlv::sim::Frame>(std::move(envelope));
-        behavior.setPos(Frame);
-    }};
-
 
     cluon::OD4Session od4{CID};
     od4.dataTrigger(opendlv::proxy::DistanceReading::ID(), onDistanceReading);
     od4.dataTrigger(opendlv::proxy::VoltageReading::ID(), onVoltageReading);
-    od4.dataTrigger(opendlv::sim::Frame::ID(), onFrame);
 
     auto atFrequency{[&VERBOSE, &behavior, &od4]() -> bool
       {

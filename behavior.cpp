@@ -17,9 +17,8 @@
 
 #include "behavior.hpp"
 #include <time.h>
-#include <math.h>
-#include <cmath>
 #include <iostream>
+#include <math.h>
 
 Behavior::Behavior() noexcept:
   m_frontUltrasonicReading{},
@@ -33,8 +32,7 @@ Behavior::Behavior() noexcept:
   m_leftIrReadingMutex{},
   m_rightIrReadingMutex{},
   m_groundSteeringAngleRequestMutex{},
-  m_pedalPositionRequestMutex{},
-  m_positionMutex{}
+  m_pedalPositionRequestMutex{}
 {
 }
 
@@ -74,12 +72,6 @@ void Behavior::setRightIr(opendlv::proxy::VoltageReading const &rightIrReading) 
   m_rightIrReading = rightIrReading;
 }
 
-void Behavior::setPos(opendlv::sim::Frame const &posReading) noexcept
-{
-  std::lock_guard<std::mutex> lock(m_positionMutex);
-  m_position = posReading;
-}
-
 
 void Behavior::step() noexcept
 {
@@ -87,20 +79,16 @@ void Behavior::step() noexcept
   opendlv::proxy::DistanceReading rearUltrasonicReading;
   opendlv::proxy::VoltageReading leftIrReading;
   opendlv::proxy::VoltageReading rightIrReading;
-  opendlv::sim::Frame posReading;
-
   {
     std::lock_guard<std::mutex> lock1(m_frontUltrasonicReadingMutex);
     std::lock_guard<std::mutex> lock2(m_rearUltrasonicReadingMutex);
     std::lock_guard<std::mutex> lock3(m_leftIrReadingMutex);
     std::lock_guard<std::mutex> lock4(m_rightIrReadingMutex);
-    std::lock_guard<std::mutex> lock5(m_positionMutex);
 
     frontUltrasonicReading = m_frontUltrasonicReading;
     rearUltrasonicReading = m_rearUltrasonicReading;
     leftIrReading = m_leftIrReading;
     rightIrReading = m_rightIrReading;
-    posReading = m_position;
   }
 
   float frontDistance = frontUltrasonicReading.distance();
@@ -108,115 +96,133 @@ void Behavior::step() noexcept
   double leftDistance = convertIrVoltageToDistance(leftIrReading.voltage());
   double rightDistance = convertIrVoltageToDistance(rightIrReading.voltage());
 
-  double xp_prev = xp;
-  double yp_prev = yp;
-  double heading_prev = heading;
+  DEFAULT_SPEED = GIVEN_SPEED;
+  if(frontDistance < SLOW_DISTANCE) DEFAULT_SPEED = GIVEN_SPEED - SPEED_DIFFERENCE;
 
-  //-----------------------------ADDING NOISE-------------
-  xp = posReading.x();
-  yp = posReading.y();
-  heading = posReading.yaw();
+  speedUp(); //default speed adjustment
+  randomTurn(rightDistance, leftDistance); //decides random direction if area is free
 
-  xp = randomNoise(xp, 0.05);
-  yp = randomNoise(yp, 0.05);
-  heading = randomNoise(heading, 0.05);
-
-  xp = averageValue(xp, xp_prev, 0.7);
-  yp = averageValue(yp, yp_prev, 0.7);
-  heading = averageValue(heading, heading_prev, 0.7);
-
-  //------------------------------------------------------
-
-  double xGoal = path.front().first;
-  double yGoal = path.front().second;
-
-  double desiredHeading = std::atan2(yGoal - yp, xGoal - xp);
-
-  if(heading < 0 && desiredHeading > 0 && (abs(heading) + abs(desiredHeading)) > PI) groundSteeringAngle = 0.9f*(float)(desiredHeading + heading);
-  else if(heading > 0 && desiredHeading < 0 && (abs(heading) + abs(desiredHeading)) > PI) groundSteeringAngle = 0.9f*(float)(desiredHeading + heading);
-  else groundSteeringAngle = 0.9f*(float)(desiredHeading - heading);
-
-  pedalPosition = DEFAULT_SPEED;
-
-  if(reached(xp, yp, xGoal, yGoal) && path.size() > 0)
+  if (frontDistance < 0.17f)
   {
-      std::cout << "point passed" << std::endl;
-      path.pop_front();
-      if(path.size() > 0)
-      {
-          xGoal = path.front().first;
-          yGoal = path.front().second;
-          groundSteeringAngle = 0.0f;
-      }
-      else
-      {
-          std::cout << "path finished" << std::endl;
-          xGoal = 10000;
-          yGoal = 10000;
-          pedalPosition = 0.0;
-          groundSteeringAngle = 0.0f;
-      }
+    backing = true;
+  }
+  else if (rearDistance < 0.15f)
+  {
+    speedUp();
+  }
+  else if (frontDistance < 0.4f || rightDistance < 0.4f || leftDistance < 0.4f)
+  {
+    avoiding = true;
+    turningCount = 0;
   }
 
-  if(path.size() == 0)
-  {
-      pedalPosition = 0.0;
-      groundSteeringAngle = 0.0f;
-  }
+  backOut(); //if needed, the direction and angle are reversed; has a priority
 
-  if (frontDistance < 0.15f || rearDistance < 0.1f || rightDistance < 0.1f || leftDistance < 0.1f)
-  {
-      pedalPosition = 0.0f;
-      groundSteeringAngle = 0.0f;
-  }
-
+  //if (frontDistance < 0.03f)
+  //{
+  //   pedalPosition = 0.0f;
+  //   groundSteeringAngle = 0.0f;
+  //}
  
   {
-      std::lock_guard<std::mutex> lock1(m_groundSteeringAngleRequestMutex);
-      std::lock_guard<std::mutex> lock2(m_pedalPositionRequestMutex);
+    std::lock_guard<std::mutex> lock1(m_groundSteeringAngleRequestMutex);
+    std::lock_guard<std::mutex> lock2(m_pedalPositionRequestMutex);
 
-      opendlv::proxy::GroundSteeringRequest groundSteeringAngleRequest;
-      groundSteeringAngleRequest.groundSteering(groundSteeringAngle);
-      m_groundSteeringAngleRequest = groundSteeringAngleRequest;
+    opendlv::proxy::GroundSteeringRequest groundSteeringAngleRequest;
+    groundSteeringAngleRequest.groundSteering(groundSteeringAngle);
+    m_groundSteeringAngleRequest = groundSteeringAngleRequest;
 
-      opendlv::proxy::PedalPositionRequest pedalPositionRequest;
-      pedalPositionRequest.position(pedalPosition);
-      m_pedalPositionRequest = pedalPositionRequest;
+    opendlv::proxy::PedalPositionRequest pedalPositionRequest;
+    pedalPositionRequest.position(pedalPosition);
+    m_pedalPositionRequest = pedalPositionRequest;
   }
 }
 
 double Behavior::convertIrVoltageToDistance(float voltage) const noexcept
 {
-    double voltageDividerR1 = 1000.0;
-    double voltageDividerR2 = 1000.0;
 
-    double sensorVoltage = (voltageDividerR1 + voltageDividerR2) / voltageDividerR2 * voltage;
-    double distance = (2.5 - sensorVoltage) / 0.07;
-    return distance;
+  double distance = -0.0256*pow(voltage, 5) + 0.2504*pow(voltage, 4) - 0.9545*pow(voltage, 3) + 1.7879*pow(voltage, 2) - 1.7121*voltage + 0.7788;
+  //double distance = 0.00372 * sensorVoltage * sensorVoltage - 0.21730 * sensorVoltage + 3.34464;
+  return distance;
+
 }
 
-void Behavior::setGoal(std::list<std::pair<float,float>> p, double x, double y, double h) noexcept
+void Behavior::randomTurn(double right, double left) noexcept
 {
-    path = p;
-    xp = x;
-    yp = y;
-    heading = h;
+  //either continues to turn, stops turning or checks if it should turn randomly
+  if(avoiding && turningCount == 0)
+  {
+    if(left < right) turningDirection = RIGHT;
+    else turningDirection = LEFT;
+  }
+  if(avoiding && turningCount < 20)
+  {
+    if (turningDirection) groundSteeringAngle = 0.45f;
+    else groundSteeringAngle = -0.45f;
+    turningCount++;
+  }
+  else if(avoiding) avoiding = false;
+  else
+  {
+    srand(time(0));
+    int r = rand();
+    if (turning) {
+      if (turningDirection) groundSteeringAngle = 0.3f;
+      else groundSteeringAngle = -0.3f;
+    } else {
+      groundSteeringAngle = 0.0f;
+    }
+    turningCount++;
+    if (turningCount > 40) {
+      turning = false;
+      turningCount = 0;
+      groundSteeringAngle = 0.0f;
+      if (r % 2 == 0) turningDirection = LEFT;
+      else turningDirection = RIGHT;
+    }
+    if (r % 10 == 0) turning = true;
+  }
 }
 
-bool Behavior::reached(double xp, double yp, double xGoal, double yGoal) noexcept
+void Behavior::backOut() noexcept
 {
-    if(abs(xp - xGoal) < 0.15 && abs(yp - yGoal) < 0.15) return 1;
-    else return 0;
+  //either continues to back out or stops
+  if(backing)
+  {
+    pedalPosition = DEFAULT_BACKWARDS;
+    if (turningDirection) groundSteeringAngle = -0.45f;
+    else groundSteeringAngle = 0.45f;
+  }
+  if(backingCount > 10)
+  {
+    backing = false;
+    backingCount = 0;
+  }
+  backingCount++;
 }
 
-double Behavior::randomNoise(double value, double range) noexcept
+void Behavior::speedUp() noexcept
 {
-    std::normal_distribution<double> g(value,range);
-    std::default_random_engine re(time(0));
-    return g(re);
+  if(pedalPosition < DEFAULT_SPEED)
+  {
+     if(pedalPosition < DEFAULT_SPEED - STEP)
+     {
+	    pedalPosition += STEP;
+     }
+     else
+     {
+        pedalPosition = DEFAULT_SPEED;
+     }
+  }
+
+  else pedalPosition = DEFAULT_SPEED;
+
 }
 
-double Behavior::averageValue(double value, double previous, double gain) noexcept
+void Behavior::setSpeed(float forward, float backwards, float difference, float slow) noexcept
 {
-    return gain*value + (1-gain)*previous;
+   GIVEN_SPEED = forward;
+   DEFAULT_BACKWARDS = backwards;
+   SPEED_DIFFERENCE = difference;
+   SLOW_DISTANCE = slow;
 }

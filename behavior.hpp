@@ -18,12 +18,11 @@
 #ifndef BEHAVIOR
 #define BEHAVIOR
 
-#include <mutex>
-#include <list>
-#include <random>
-#include "opendlv-standard-message-set.hpp"
+#define LEFT 1
+#define RIGHT 0
 
-#define PI 3.14159
+#include <mutex>
+#include "opendlv-standard-message-set.hpp"
 
 class Behavior {
  private:
@@ -43,15 +42,14 @@ class Behavior {
   void setRearUltrasonic(opendlv::proxy::DistanceReading const &) noexcept;
   void setLeftIr(opendlv::proxy::VoltageReading const &) noexcept;
   void setRightIr(opendlv::proxy::VoltageReading const &) noexcept;
-  void setPos(opendlv::sim::Frame const &) noexcept;
   void step() noexcept;
-  void setGoal(std::list<std::pair<float,float>>, double, double, double) noexcept;
-  bool reached(double, double, double, double) noexcept;
-  double randomNoise(double, double) noexcept;
-  double averageValue(double, double, double) noexcept;
+  void setSpeed(float, float, float, float) noexcept;
 
  private:
   double convertIrVoltageToDistance(float) const noexcept;
+  void speedUp() noexcept;
+  void randomTurn(double, double) noexcept;
+  void backOut() noexcept;
 
  private:
   opendlv::proxy::DistanceReading m_frontUltrasonicReading;
@@ -60,21 +58,26 @@ class Behavior {
   opendlv::proxy::VoltageReading m_rightIrReading;
   opendlv::proxy::GroundSteeringRequest m_groundSteeringAngleRequest;
   opendlv::proxy::PedalPositionRequest m_pedalPositionRequest;
-  opendlv::sim::Frame m_position = opendlv::sim::Frame();
   std::mutex m_frontUltrasonicReadingMutex;
   std::mutex m_rearUltrasonicReadingMutex;
   std::mutex m_leftIrReadingMutex;
   std::mutex m_rightIrReadingMutex;
   std::mutex m_groundSteeringAngleRequestMutex;
   std::mutex m_pedalPositionRequestMutex;
-  std::mutex m_positionMutex;
-  std::list<std::pair<float,float>> path = std::list<std::pair<float,float>>();
-  const float DEFAULT_SPEED = 0.2f;
+  const float STEP = 0.015f;
+  float GIVEN_SPEED = 0.11f;
+  float DEFAULT_SPEED = 0.11f;
+  float DEFAULT_BACKWARDS = -0.09f;
   float pedalPosition = 0.0f;
   float groundSteeringAngle = 0.0f;
-  double xp = 0;
-  double yp = 0;
-  double heading = 0;
+  float SPEED_DIFFERENCE = 0.0f;
+  float SLOW_DISTANCE = 0.0f;
+  bool turning = false;
+  bool backing = false;
+  bool avoiding = false;
+  int backingCount = 0;
+  int turningCount = 0;
+  bool turningDirection = RIGHT;
 };
 
 #endif
