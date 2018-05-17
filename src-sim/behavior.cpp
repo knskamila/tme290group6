@@ -129,11 +129,13 @@ void Behavior::step() noexcept
 
   double xGoal = path.front().first;
   double yGoal = path.front().second;
-  
-  double desiredHeading = -2*atan2(xGoal - xp, yGoal - yp);
 
-  if(heading*desiredHeading > 0) groundSteeringAngle = 0.9f*(float)(desiredHeading - heading);
-  else groundSteeringAngle = -0.9f*(float)(desiredHeading + heading);
+  double desiredHeading = std::atan2(yGoal - yp, xGoal - xp);
+
+  if(heading < 0 && desiredHeading > 0 && (abs(heading) + abs(desiredHeading)) > PI) groundSteeringAngle = 0.9f*(float)(desiredHeading + heading);
+  else if(heading > 0 && desiredHeading < 0 && (abs(heading) + abs(desiredHeading)) > PI) groundSteeringAngle = 0.9f*(float)(desiredHeading + heading);
+  else groundSteeringAngle = 0.9f*(float)(desiredHeading - heading);
+
   pedalPosition = DEFAULT_SPEED;
 
   if(reached(xp, yp, xGoal, yGoal) && path.size() > 0)

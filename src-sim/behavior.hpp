@@ -21,8 +21,9 @@
 #include <mutex>
 #include <list>
 #include <random>
-
 #include "opendlv-standard-message-set.hpp"
+
+#define PI 3.14159
 
 class Behavior {
  private:
