@@ -32,15 +32,20 @@ int32_t main(int32_t argc, char **argv) {
     bool const VERBOSE{commandlineArguments.count("verbose") != 0};
     uint16_t const CID = std::stoi(commandlineArguments["cid"]);
     float const FREQ = std::stof(commandlineArguments["freq"]);
-    float const X = std::stof(commandlineArguments["x"]);
-    float const Y = std::stof(commandlineArguments["y"]);
+    float const XG = std::stof(commandlineArguments["xgoal"]);
+    float const YG = std::stof(commandlineArguments["ygoal"]);
+    float const XP = std::stof(commandlineArguments["xpos"]);
+    float const YP = std::stof(commandlineArguments["ypos"]);
+    float const CORNERX = std::stof(commandlineArguments["xcorn"]);
+    float const CORNERY = std::stof(commandlineArguments["ycorn"]);
+    float const H = std::stof(commandlineArguments["yaw"]);
     float const dx = std::stof(commandlineArguments["dx"]);
 
     Behavior behavior;
    // std::cout << "provide goal coordinates: x y" << std::endl;
    //
-    Pathplanner pp(commandlineArguments["map-file"], -3.0, -3.0, 7, 7, dx, -2.0, -0.7, X, Y);
-    behavior.setGoal(pp.getPath());
+    Pathplanner pp(commandlineArguments["map-file"], CORNERX, CORNERY, 7, 7, dx, XP, YP, XG, YG);
+    behavior.setGoal(pp.getPath(), XG, YG, H);
 
     auto onDistanceReading{[&behavior](cluon::data::Envelope &&envelope)
       {

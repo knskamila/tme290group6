@@ -49,11 +49,30 @@ void Graph::addEdge(int src, int dest, float weight)
 
 std::vector<int> Graph::simplifyPath(std::vector<int> path, int width)
 {
-    int it = 0;
+    /*int it = 0;
     std::list<int> toErase;
     while(it < path.size() - 2)
     {
         if(getLinearityType(path.at(it), path.at(it+1), width) == getLinearityType(path.at(it+1), path.at(it+2), width))
+        {
+            toErase.push_front(it + 1);
+        }
+        it++;
+    }
+    for(auto v: toErase)
+    {
+        path.erase(path.begin() + v);
+    }
+    return path;*/
+
+
+    //we can make these assumptions:
+
+    int it = 0;
+    std::list<int> toErase;
+    while(it < path.size() - 2)
+    {
+        if(getConnection(path.at(it), path.at(it+1)) == getConnection(path.at(it+1), path.at(it+2)))
         {
             toErase.push_front(it + 1);
         }
@@ -142,18 +161,14 @@ int Graph::getLinearityType(int nodeA, int nodeB, int width)
     else return 0;
 }
 
-void Graph::printInfo()
+void Graph::printInfo(std::vector<int> path)
 {
-    std::cout << "size: " << this->nNodes << std::endl;
     std::cout << "connections:" << std::endl;
-    for(int i = 0; i<nNodes; i++)
+    for(int i = 0; i < path.size() - 1; i++)
     {
-        std::cout << i << " connects with:" << std::endl;
-        listOfConnections pairs = connections[i];
-        for(auto v: pairs)
-        {
-            std::cout << " " << v.first << " with weight " << v.second << std::endl;
-        }
+        int nodeA = path.at(i);
+        int nodeB = path.at(i+1);
+        std::cout << nodeA << " connects with " << nodeB << " through " << getConnection(nodeA, nodeB) << std::endl;
     }
 }
 

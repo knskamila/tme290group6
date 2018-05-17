@@ -63,13 +63,12 @@ void Pathplanner::createGraph(string filename, float xbase, float ybase, int hei
     vector<pair<float, float>> wallPoints;
     vector<int> wallNodes;
 
-    std::cout << filename << std::endl;
-
-    std::ifstream input(filename);
+    std::fstream input(filename);
     for (std::string str; getline(input, str);) {
         std::vector<std::string> coordinates = stringtoolbox::split(
                 stringtoolbox::split(stringtoolbox::trim(str), ';')[0], ',');
         if (coordinates.size() == 4) {
+            std::cout << "right size" << std::endl;
             vector<float> tp;
             for(int i = 0; i < 4; i++)
             {
@@ -112,47 +111,65 @@ void Pathplanner::createGraph(string filename, float xbase, float ybase, int hei
 
     for (int i = 0; i < nrNodes; i++) {
         if (notPartOf(wallNodes, i)) {
+            // nodes with no walls
+            if ((i % sqrtNodes != (sqrtNodes - 1)) && (i % sqrtNodes != 0) && (i > sqrtNodes) &&
+                (i < (nrNodes - sqrtNodes))) {
+                if (notPartOf(wallNodes, i + 1)) {
+                    g.addEdge(i, i + 1, 1);
+                }
+                if (notPartOf(wallNodes, i - 1)) {
+                    g.addEdge(i, i - 1, 1);
+                }
+                if (notPartOf(wallNodes, i + sqrtNodes)) {
+                    g.addEdge(i, i + sqrtNodes, 1);
+                }
+                if (notPartOf(wallNodes, i - sqrtNodes)) {
+                    g.addEdge(i, i - sqrtNodes, 1);
+                }
+                if (notPartOf(wallNodes, i - sqrtNodes - 1)) {
+                    g.addEdge(i, i - sqrtNodes - 1, sqrt(2));
+                }
+                if (notPartOf(wallNodes, i - sqrtNodes + 1)) {
+                    g.addEdge(i, i - sqrtNodes + 1, sqrt(2));
+                }
+                if (notPartOf(wallNodes, i + sqrtNodes - 1)) {
+                    g.addEdge(i, i + sqrtNodes - 1, sqrt(2));
+                }
+                if (notPartOf(wallNodes, i + sqrtNodes + 1)) {
+                    g.addEdge(i, i + sqrtNodes + 1, sqrt(2));
+                }
+            }
+        }
+    }
+
+    for (int i = 0; i < nrNodes; i++) {
+        if (notPartOf(wallNodes, i)) {
+            // nodes with no walls
             if ((i % sqrtNodes != (sqrtNodes-1)) && (i % sqrtNodes !=0) && (i > sqrtNodes) && (i < (nrNodes - sqrtNodes)) ) {
-                if (notPartOf(wallNodes, i+1) )
-                    g.addEdge(i, i+1, 1);
-                if (notPartOf(wallNodes, i-1))
-                    g.addEdge(i, i-1, 1);
-                if (notPartOf(wallNodes, i + sqrtNodes))
-                    g.addEdge(i, i+ sqrtNodes, 1);
-                if (notPartOf(wallNodes, i - sqrtNodes))
-                    g.addEdge(i, i - sqrtNodes, 1);
-                if (notPartOf(wallNodes, i - sqrtNodes - 1) )
-                    g.addEdge(i, i - sqrtNodes -1 , sqrt(2));
-                if (notPartOf(wallNodes, i - sqrtNodes +1))
-                    g.addEdge(i, i - sqrtNodes +1 , sqrt(2));
-                if (notPartOf(wallNodes, i + sqrtNodes -1 ))
-                    g.addEdge(i, i + sqrtNodes -1, sqrt(2));
-                if (notPartOf(wallNodes, i + sqrtNodes +1))
-                    g.addEdge(i, i + sqrtNodes +1, sqrt(2));
-
-            } else if (i < sqrtNodes) {
-                if (notPartOf(wallNodes, i + 1) && (i != sqrtNodes) )
-                    g.addEdge(i, i+1, 1);
-                if (notPartOf(wallNodes, i-1) && (i != 0))
-                    g.addEdge(i, i-1, 1);
-            } else if (i > (nrNodes - sqrtNodes)) {
-                if (notPartOf(wallNodes, i + 1) && (i != nrNodes -1) )
-                    g.addEdge(i, i+1, 1);
-                if (notPartOf(wallNodes, i-1) && (i != (nrNodes - sqrtNodes -1)))
-                    g.addEdge(i, i-1, 1);
-
-            } else if (i % sqrtNodes == sqrtNodes -1) {
-                if (notPartOf(wallNodes, i + sqrtNodes) && (i != nrNodes -1))
-                    g.addEdge(i, i+ sqrtNodes, 1);
-                if (notPartOf(wallNodes, i - sqrtNodes) && (i != sqrtNodes -1))
-                    g.addEdge(i, i - sqrtNodes, 1);
-
-            } else if (i % sqrtNodes == 0) {
-                if (notPartOf(wallNodes, i + sqrtNodes) && (i != (nrNodes-sqrtNodes )))
-                    g.addEdge(i, i+ sqrtNodes, 1);
-                if (notPartOf(wallNodes, i - sqrtNodes) && (i != 0))
-                    g.addEdge(i, i - sqrtNodes, 1);
-
+                if (!notPartOf(wallNodes, i + 1)) {
+                    g.zeroNode(i);
+                }
+                if (!notPartOf(wallNodes, i - 1)) {
+                    g.zeroNode(i);
+                }
+                if (!notPartOf(wallNodes, i + sqrtNodes)) {
+                    g.zeroNode(i);
+                }
+                if (!notPartOf(wallNodes, i - sqrtNodes)) {
+                    g.zeroNode(i);
+                }
+                if (!notPartOf(wallNodes, i - sqrtNodes - 1)) {
+                    g.zeroNode(i);
+                }
+                if (!notPartOf(wallNodes, i - sqrtNodes + 1)) {
+                    g.zeroNode(i);
+                }
+                if (!notPartOf(wallNodes, i + sqrtNodes - 1)) {
+                    g.zeroNode(i);
+                }
+                if (!notPartOf(wallNodes, i + sqrtNodes + 1)) {
+                    g.zeroNode(i);
+                }
             }
         }
     }
@@ -160,7 +177,10 @@ void Pathplanner::createGraph(string filename, float xbase, float ybase, int hei
 
 std::list<std::pair<float,float>> Pathplanner::getPath()
 {
-    return path;
+    std::list<std::pair<float,float>> path2;
+    path2 = path;
+    path2.pop_front();
+    return path2;
 }
 
 Pathplanner::Pathplanner(string filename, float xBase, float yBase, int height, int width, float dx, float xBegin, float yBegin, float xGoal, float yGoal) noexcept {
@@ -173,6 +193,7 @@ Pathplanner::Pathplanner(string filename, float xBase, float yBase, int height, 
     //g.printMap(width * (1 / dx), dummy);
     std::vector<int> nodePath = g.dijkstra(nodeBegin, nodeGoal);
     //g.printMap(width * (1 / dx), nodePath);
+    g.printInfo(nodePath);
     nodePath = g.simplifyPath(nodePath, width);
     g.printMap(width * (1 / dx), nodePath);
     path = nodeToPoint(nodePath, width, xBase, yBase, dx);

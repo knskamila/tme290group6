@@ -18,6 +18,7 @@
 #include "behavior.hpp"
 #include <time.h>
 #include <math.h>
+#include <cmath>
 #include <iostream>
 
 Behavior::Behavior() noexcept:
@@ -106,21 +107,33 @@ void Behavior::step() noexcept
   float rearDistance = rearUltrasonicReading.distance();
   double leftDistance = convertIrVoltageToDistance(leftIrReading.voltage());
   double rightDistance = convertIrVoltageToDistance(rightIrReading.voltage());
-  double xp = posReading.x();
-  double yp = posReading.y();
-  double heading = posReading.yaw();
+
+  double xp_prev = xp;
+  double yp_prev = yp;
+  double heading_prev = heading;
+
+  //-----------------------------ADDING NOISE-------------
+  xp = posReading.x();
+  yp = posReading.y();
+  heading = posReading.yaw();
 
   xp = randomNoise(xp, 0.05);
   yp = randomNoise(yp, 0.05);
   heading = randomNoise(heading, 0.05);
 
+  xp = averageValue(xp, xp_prev, 0.7);
+  yp = averageValue(yp, yp_prev, 0.7);
+  heading = averageValue(heading, heading_prev, 0.7);
+
+  //------------------------------------------------------
+
   double xGoal = path.front().first;
   double yGoal = path.front().second;
+  
+  double desiredHeading = -2*atan2(xGoal - xp, yGoal - yp);
 
-  double desiredHeadingTan = (yp - yGoal) / (xp - xGoal);
-  double desiredHeading = atan(desiredHeadingTan);
-
-  groundSteeringAngle = 0.9f*(float)(desiredHeading - heading);
+  if(heading*desiredHeading > 0) groundSteeringAngle = 0.9f*(float)(desiredHeading - heading);
+  else groundSteeringAngle = -0.9f*(float)(desiredHeading + heading);
   pedalPosition = DEFAULT_SPEED;
 
   if(reached(xp, yp, xGoal, yGoal) && path.size() > 0)
@@ -131,6 +144,7 @@ void Behavior::step() noexcept
       {
           xGoal = path.front().first;
           yGoal = path.front().second;
+          groundSteeringAngle = 0.0f;
       }
       else
       {
@@ -150,38 +164,41 @@ void Behavior::step() noexcept
 
   if (frontDistance < 0.15f || rearDistance < 0.1f || rightDistance < 0.1f || leftDistance < 0.1f)
   {
-    pedalPosition = 0.0f;
-    groundSteeringAngle = 0.0f;
+      pedalPosition = 0.0f;
+      groundSteeringAngle = 0.0f;
   }
 
  
   {
-    std::lock_guard<std::mutex> lock1(m_groundSteeringAngleRequestMutex);
-    std::lock_guard<std::mutex> lock2(m_pedalPositionRequestMutex);
+      std::lock_guard<std::mutex> lock1(m_groundSteeringAngleRequestMutex);
+      std::lock_guard<std::mutex> lock2(m_pedalPositionRequestMutex);
 
-    opendlv::proxy::GroundSteeringRequest groundSteeringAngleRequest;
-    groundSteeringAngleRequest.groundSteering(groundSteeringAngle);
-    m_groundSteeringAngleRequest = groundSteeringAngleRequest;
+      opendlv::proxy::GroundSteeringRequest groundSteeringAngleRequest;
+      groundSteeringAngleRequest.groundSteering(groundSteeringAngle);
+      m_groundSteeringAngleRequest = groundSteeringAngleRequest;
 
-    opendlv::proxy::PedalPositionRequest pedalPositionRequest;
-    pedalPositionRequest.position(pedalPosition);
-    m_pedalPositionRequest = pedalPositionRequest;
+      opendlv::proxy::PedalPositionRequest pedalPositionRequest;
+      pedalPositionRequest.position(pedalPosition);
+      m_pedalPositionRequest = pedalPositionRequest;
   }
 }
 
 double Behavior::convertIrVoltageToDistance(float voltage) const noexcept
 {
-  double voltageDividerR1 = 1000.0;
-  double voltageDividerR2 = 1000.0;
+    double voltageDividerR1 = 1000.0;
+    double voltageDividerR2 = 1000.0;
 
-  double sensorVoltage = (voltageDividerR1 + voltageDividerR2) / voltageDividerR2 * voltage;
-  double distance = (2.5 - sensorVoltage) / 0.07;
-  return distance;
+    double sensorVoltage = (voltageDividerR1 + voltageDividerR2) / voltageDividerR2 * voltage;
+    double distance = (2.5 - sensorVoltage) / 0.07;
+    return distance;
 }
 
-void Behavior::setGoal(std::list<std::pair<float,float>> p) noexcept
+void Behavior::setGoal(std::list<std::pair<float,float>> p, double x, double y, double h) noexcept
 {
-  path = p;
+    path = p;
+    xp = x;
+    yp = y;
+    heading = h;
 }
 
 bool Behavior::reached(double xp, double yp, double xGoal, double yGoal) noexcept
@@ -192,7 +209,12 @@ bool Behavior::reached(double xp, double yp, double xGoal, double yGoal) noexcep
 
 double Behavior::randomNoise(double value, double range) noexcept
 {
-    std::uniform_real_distribution<double> unif(-range,range);
-    std::default_random_engine re;
-    return value + unif(re);
+    std::normal_distribution<double> g(value,range);
+    std::default_random_engine re(time(0));
+    return g(re);
+}
+
+double Behavior::averageValue(double value, double previous, double gain) noexcept
+{
+    return gain*value + (1-gain)*previous;
 }

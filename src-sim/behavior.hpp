@@ -44,9 +44,10 @@ class Behavior {
   void setRightIr(opendlv::proxy::VoltageReading const &) noexcept;
   void setPos(opendlv::sim::Frame const &) noexcept;
   void step() noexcept;
-  void setGoal(std::list<std::pair<float,float>>) noexcept;
+  void setGoal(std::list<std::pair<float,float>>, double, double, double) noexcept;
   bool reached(double, double, double, double) noexcept;
   double randomNoise(double, double) noexcept;
+  double averageValue(double, double, double) noexcept;
 
  private:
   double convertIrVoltageToDistance(float) const noexcept;
@@ -66,12 +67,13 @@ class Behavior {
   std::mutex m_groundSteeringAngleRequestMutex;
   std::mutex m_pedalPositionRequestMutex;
   std::mutex m_positionMutex;
-  const float DEFAULT_SPEED = 0.2f;
   std::list<std::pair<float,float>> path = std::list<std::pair<float,float>>();
-  //float xp = 0.0f;
-  //float yp = 0.0f;
+  const float DEFAULT_SPEED = 0.2f;
   float pedalPosition = 0.0f;
   float groundSteeringAngle = 0.0f;
+  double xp = 0;
+  double yp = 0;
+  double heading = 0;
 };
 
 #endif
