@@ -26,10 +26,9 @@ public:
     void printMap(int, std::vector<int>);
     int getLinearityType(int, int, int);
     void zeroNode(int);
-    int nNodes;
 
 private:
-    //int nNodes;
+    int nNodes;
     listOfConnections *connections;
 
 };

@@ -40,11 +40,13 @@ int32_t main(int32_t argc, char **argv) {
     float const CORNERY = std::stof(commandlineArguments["ycorn"]);
     float const H = std::stof(commandlineArguments["yaw"]);
     float const dx = std::stof(commandlineArguments["dx"]);
+    float const WIDTH = std::stof(commandlineArguments["width"]);
+    float const HEIGHT = std::stof(commandlineArguments["height"]);
+    int const DIMENSION = ceil(fmax(WIDTH, HEIGHT));
 
     Behavior behavior;
-   // std::cout << "provide goal coordinates: x y" << std::endl;
-   //
-    Pathplanner pp(commandlineArguments["map-file"], CORNERX, CORNERY, 7, 7, dx, XP, YP, XG, YG);
+
+    Pathplanner pp(commandlineArguments["map-file"], CORNERX, CORNERY, DIMENSION, dx, XP, YP, XG, YG);
     behavior.setGoal(pp.getPath(), XG, YG, H);
 
     auto onDistanceReading{[&behavior](cluon::data::Envelope &&envelope)

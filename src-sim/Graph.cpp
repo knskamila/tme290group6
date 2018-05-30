@@ -49,24 +49,7 @@ void Graph::addEdge(int src, int dest, float weight)
 
 std::vector<int> Graph::simplifyPath(std::vector<int> path, int width)
 {
-    /*int it = 0;
-    std::list<int> toErase;
-    while(it < path.size() - 2)
-    {
-        if(getLinearityType(path.at(it), path.at(it+1), width) == getLinearityType(path.at(it+1), path.at(it+2), width))
-        {
-            toErase.push_front(it + 1);
-        }
-        it++;
-    }
-    for(auto v: toErase)
-    {
-        path.erase(path.begin() + v);
-    }
-    return path;*/
-
-
-    //we can make these assumptions:
+    //we can make these assumptions, since certain combinations (/\, |_) will never happen:
 
     int it = 0;
     std::list<int> toErase;

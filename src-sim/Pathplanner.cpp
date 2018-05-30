@@ -17,12 +17,12 @@ void Pathplanner::swap(float *a, float *b)
     }
 }
 
-int Pathplanner::pointToNode(float xbase, float ybase, float x, float y, int height, float dx)
+int Pathplanner::pointToNode(float xbase, float ybase, float x, float y, int width, float dx)
 {
     int xGrid = (int) ((x - xbase) / dx + 0.5);
     int yGrid = (int) ((y - ybase) / dx + 0.5);
 
-    return yGrid + xGrid * (float) height / dx;
+    return yGrid + xGrid * (float) width / dx;
 }
 
 pair<float, float> Pathplanner::nodeToPoint(int node, int width, float xBase, float yBase, float dx)
@@ -49,15 +49,15 @@ bool Pathplanner::notPartOf(vector<int> vectorList, int elem) {
 }
 
 
-void Pathplanner::createGraph(string filename, float xbase, float ybase, int height, int width, float dx) {
+void Pathplanner::createGraph(string filename, float xbase, float ybase, int width, float dx) {
     string tmpstr;
     vector<string> lines;
     ifstream txtfile;
 
     float multiplier = 1/dx;
 
-    int nrNodes = height*width*multiplier*multiplier;
-    int sqrtNodes = height*multiplier;
+    int nrNodes = width*width*multiplier*multiplier;
+    int sqrtNodes = width*multiplier;
 
     g = Graph(nrNodes);
     vector<pair<float, float>> wallPoints;
@@ -106,7 +106,7 @@ void Pathplanner::createGraph(string filename, float xbase, float ybase, int hei
 
 
     for (int i = 0; i < wallPoints.size() ; i ++) {
-        wallNodes.push_back(pointToNode(xbase, ybase, wallPoints[i].first, wallPoints[i].second, height, dx));
+        wallNodes.push_back(pointToNode(xbase, ybase, wallPoints[i].first, wallPoints[i].second, width, dx));
     }
 
     for (int i = 0; i < nrNodes; i++) {
@@ -183,16 +183,11 @@ std::list<std::pair<float,float>> Pathplanner::getPath()
     return path2;
 }
 
-Pathplanner::Pathplanner(string filename, float xBase, float yBase, int height, int width, float dx, float xBegin, float yBegin, float xGoal, float yGoal) noexcept {
-    createGraph(filename, xBase, yBase, height, width, dx);
-    int nodeBegin = pointToNode(xBase, yBase, xBegin, yBegin, height, dx);
-    int nodeGoal = pointToNode(xBase, yBase, xGoal, yGoal, height, dx);
-    //std::vector<int> dummy;
-    //dummy.insert(dummy.begin(), nodeGoal);
-    //dummy.insert(dummy.begin(), nodeBegin);
-    //g.printMap(width * (1 / dx), dummy);
+Pathplanner::Pathplanner(string filename, float xBase, float yBase, int width, float dx, float xBegin, float yBegin, float xGoal, float yGoal) noexcept {
+    createGraph(filename, xBase, yBase, width, dx);
+    int nodeBegin = pointToNode(xBase, yBase, xBegin, yBegin, width, dx);
+    int nodeGoal = pointToNode(xBase, yBase, xGoal, yGoal, width, dx);
     std::vector<int> nodePath = g.dijkstra(nodeBegin, nodeGoal);
-    //g.printMap(width * (1 / dx), nodePath);
     g.printInfo(nodePath);
     nodePath = g.simplifyPath(nodePath, width);
     g.printMap(width * (1 / dx), nodePath);
@@ -201,5 +196,4 @@ Pathplanner::Pathplanner(string filename, float xBase, float yBase, int height, 
     {
         std::cout << v.first << ", " << v.second << std::endl;
     }
-
 }
